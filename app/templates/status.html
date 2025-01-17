@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Consultancy Request Status</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full mx-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+                <h2 class="text-2xl font-bold mb-4">Request Status</h2>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Status</p>
+                        <p class="mt-1">{{ status }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Date</p>
+                        <p class="mt-1">{{ date }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Description</p>
+                        <p class="mt-1">{{ description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultancy Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.1/luxon.min.js"></script>
+</head>
+
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h1 class="text-2xl font-bold mb-6">Consultancy Requests Admin Dashboard</h1>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-2 text-left">ID</th>
+                            <th class="px-4 py-2 text-left">User ID</th>
+                            <th class="px-4 py-2 text-left">Date</th>
+                            <th class="px-4 py-2 text-left">Description</th>
+                            <th class="px-4 py-2 text-left">Status</th>
+                            <th class="px-4 py-2 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsTable">
+                        <!-- Requests will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'pending':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'approved':
+                    return 'bg-green-100 text-green-800';
+                case 'rejected':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-gray-100';
+            }
+        }
+
+        async function loadRequests() {
+            try {
+                const response = await fetch('http://localhost:8000/consultancy/get_consultancy_requests');
+                const requests = await response.json();
+
+                const tableBody = document.getElementById('requestsTable');
+                tableBody.innerHTML = '';
+
+                requests.forEach(request => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-t';
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${request.id}</td>
+                        <td class="px-4 py-2">${request.user_id}</td>
+                        <td class="px-4 py-2">${formatDate(request.date)}</td>
+                        <td class="px-4 py-2">${request.description}</td>
+                        <td class="px-4 py-2">
+                            <span class="px-2 py-1 rounded-full text-sm ${getStatusClass(request.status)}">
+                                ${request.status}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2">
+                            ${request.status === 'pending' ? `
+                                <button onclick="updateStatus(${request.id}, 'approved')" 
+                                        class="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600">
+                                    Approve
+                                </button>
+                                <button onclick="updateStatus(${request.id}, 'rejected')"
+                                        class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                                    Reject
+                                </button>
+                            ` : ''}
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading requests:', error);
+            }
+        }
+
+        async function updateStatus(requestId, status) {
+            try {
+                const response = await fetch('http://localhost:8000/consultancy/approve_consultancy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        request_id: requestId,
+                        status: status
+                    })
+                });
+
+                if (response.ok) {
+                    // Reload the requests after updating
+                    loadRequests();
+                } else {
+                    console.error('Error updating status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Load requests when page loads
+        loadRequests();
+
+        // Refresh requests every 30 seconds
+        setInterval(loadRequests, 30000);
+    </script>
+</body>
+
+</html>

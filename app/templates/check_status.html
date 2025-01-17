@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Consultancy Request Status</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full mx-4">
+            <!-- Search Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+                <h2 class="text-2xl font-bold mb-4">Check Request Status</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="requestId" class="block text-sm font-medium text-gray-700">Request ID</label>
+                        <input type="number" id="requestId"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            placeholder="Enter your request ID">
+                    </div>
+                    <button onclick="checkStatus()"
+                        class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Check Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Result Card (hidden by default) -->
+            <div id="resultCard" class="bg-white rounded-lg shadow-lg p-6 hidden">
+                <h3 class="text-lg font-semibold mb-4">Request Details</h3>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm text-gray-500">Status</p>
+                        <p id="statusBadge" class="mt-1"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Date</p>
+                        <p id="requestDate" class="mt-1 font-medium"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Description</p>
+                        <p id="requestDescription" class="mt-1 font-medium"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message (hidden by default) -->
+            <div id="errorMessage"
+                class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative hidden" role="alert">
+                <span class="block sm:inline">Request not found. Please check the ID and try again.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                pending: {
+                    class: 'bg-yellow-100 text-yellow-800',
+                    text: 'Pending'
+                },
+                approved: {
+                    class: 'bg-green-100 text-green-800',
+                    text: 'Approved'
+                },
+                rejected: {
+                    class: 'bg-red-100 text-red-800',
+                    text: 'Rejected'
+                }
+            };
+
+            const badge = badges[status] || badges.pending;
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${badge.class}">
+                ${badge.text}
+            </span>`;
+        }
+
+        async function checkStatus() {
+            const requestId = document.getElementById('requestId').value;
+            const resultCard = document.getElementById('resultCard');
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!requestId) {
+                errorMessage.classList.remove('hidden');
+                resultCard.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8000/consultancy/get_consultancy_requests`);
+                const requests = await response.json();
+                const request = requests.find(r => r.id === parseInt(requestId));
+
+                if (request) {
+                    // Update the result card
+                    document.getElementById('statusBadge').innerHTML = getStatusBadge(request.status);
+                    document.getElementById('requestDate').textContent = formatDate(request.date);
+                    document.getElementById('requestDescription').textContent = request.description;
+
+                    // Show result, hide error
+                    resultCard.classList.remove('hidden');
+                    errorMessage.classList.add('hidden');
+                } else {
+                    // Show error, hide result
+                    errorMessage.classList.remove('hidden');
+                    resultCard.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.classList.remove('hidden');
+                resultCard.classList.add('hidden');
+            }
+        }
+
+        // Allow pressing Enter to submit
+        document.getElementById('requestId').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                checkStatus();
+            }
+        });
+    </script>
+</body>
+
+</html>

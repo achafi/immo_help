@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultancy Request System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.1/luxon.min.js"></script>
+</head>
+
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h1 class="text-2xl font-bold mb-6">Request a Consultancy</h1>
+
+            <form id="consultancyForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Date and Time</label>
+                    <input type="datetime-local" id="dateTime" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        rows="4"></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Submit Request
+                </button>
+            </form>
+
+            <div id="message" class="mt-4 hidden"></div>
+        </div>
+
+        <!-- Add a link to the status checker -->
+        <div class="mt-4 text-center">
+            <a href="check-status.html" class="text-blue-600 hover:text-blue-800">
+                Check your request status
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('consultancyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const dateTime = document.getElementById('dateTime').value;
+            const description = document.getElementById('description').value;
+
+            const payload = {
+                user_id: 1, // Hardcoded for demo
+                date: new Date(dateTime).toISOString(),
+                description: description
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/consultancy/request_consultancy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Display message with request ID and link to check status
+                    //showMessage(`Request submitted successfully! Your request ID is: <strong>${result.id}</strong>. <a href="check-status.html?id=${result.id}" id="check-status-link">Click here to check your request status</a>.`, 'success');
+                    //showMessage(`Request submitted successfully! Your request ID is: <strong>${result.id}</strong>. <a href="status?id=${result.id}" id="check-status-link">Click here to check your request status</a>.`, 'success');
+                    //document.getElementById('consultancyForm').reset();
+                    // Redirect to the check-status page with the request ID as a query parameter
+                    window.location.href = `consultancy/check-status?id=${result.id}`;
+                } else {
+                    showMessage('Error submitting request. Please try again.', 'error');
+                }
+            } catch (error) {
+                showMessage('Error submitting request. Please try again.', 'error');
+            }
+        });
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = text;  // Use innerHTML to render HTML content (links, etc.)
+            messageDiv.className = `mt-4 p-4 rounded ${type === 'success' ? 'bg-green-100 text-green-700 border border-green-400' : 'bg-red-100 text-red-700 border border-red-400'
+                }`;
+            messageDiv.classList.remove('hidden');
+
+            if (type === 'success') {
+                // Keep success message visible for the request ID
+                // Don't auto-hide it
+            } else {
+                // Auto-hide error messages after 5 seconds
+                setTimeout(() => {
+                    messageDiv.classList.add('hidden');
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+
+</html>
