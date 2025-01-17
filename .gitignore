@@ -159,3 +159,5 @@ frontend/dist/
 *.pptx
 *.zip
 *.tar.gz
+
+.env
