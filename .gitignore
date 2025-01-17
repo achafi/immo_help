@@ -161,3 +161,4 @@ frontend/dist/
 *.tar.gz
 
 .env
+credentials/service-account.json
