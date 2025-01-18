@@ -36,6 +36,8 @@
                         <p class="text-sm text-gray-500">Status</p>
                         <p id="statusBadge" class="mt-1"></p>
                     </div>
+
+                    <div id="viewAssetsButtonContainer"></div>
                     <div>
                         <p class="text-sm text-gray-500">Date</p>
                         <p id="requestDate" class="mt-1 font-medium"></p>
@@ -99,42 +101,44 @@
             const errorMessage = document.getElementById('errorMessage');
             const assetsSection = document.getElementById('assetsSection');
             const assetsList = document.getElementById('assetsList');
-
+        
             if (!requestId) {
                 errorMessage.classList.remove('hidden');
                 resultCard.classList.add('hidden');
                 return;
             }
-
+        
             try {
                 const response = await fetch(`http://localhost:8000/consultancy/check_request_status/${requestId}`);
-
+        
                 if (response.ok) {
                     const request = await response.json();
-
+        
                     // Update the result card
                     document.getElementById('statusBadge').innerHTML = getStatusBadge(request.status);
                     document.getElementById('requestDate').textContent = formatDate(request.date);
                     document.getElementById('requestDescription').textContent = request.description;
-
-                    // Display Assets if they exist
-                    if (request.assets && request.assets.length > 0) {
-                        assetsSection.classList.remove('hidden');
-                        assetsList.innerHTML = request.assets.map(asset => `
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="font-semibold">${asset.title}</h3>
-                                        <p class="text-sm text-gray-600">${asset.description}</p>
-                                    </div>
-                                    <img src="${asset.image_path}" alt="${asset.title}" class="w-20 h-20 object-cover rounded-md ml-4">
-                                </div>
-                            </div>
-                        `).join('');
-                    } else {
-                        assetsSection.classList.add('hidden');
+        
+                    // Handle the "View Assets" button based on status
+                    const viewAssetsButton = document.getElementById('viewAssetsButton');
+                    if (request.status === "assets_added") {
+                        // Show the View Assets button
+                        if (!viewAssetsButton) {
+                            const buttonContainer = document.createElement('div');
+                            buttonContainer.className = 'mt-4';
+                            buttonContainer.innerHTML = `
+                                <a href="/consultancy/view-assets/${requestId}" 
+                                   class="inline-block bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">
+                                    View Assets
+                                </a>
+                            `;
+                            document.querySelector('#resultCard .space-y-3').appendChild(buttonContainer);
+                        }
+                    } else if (viewAssetsButton) {
+                        // Remove the button if status is not assets_added
+                        viewAssetsButton.remove();
                     }
-
+        
                     // Show result, hide error
                     resultCard.classList.remove('hidden');
                     errorMessage.classList.add('hidden');
@@ -149,7 +153,6 @@
                 resultCard.classList.add('hidden');
             }
         }
-
         // Allow pressing Enter to submit
         document.getElementById('requestId').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {

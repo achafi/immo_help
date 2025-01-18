@@ -54,12 +54,43 @@ async def check_status_page(request: Request, id: int, db: Session = Depends(get
     if not db_request:
         return HTMLResponse(content="Request not found.", status_code=404)
 
-    # Render the page with the fetched data
+    # If status is assets_added, fetch assets and show them
+    if db_request.status == models.RequestStatus.ASSETS_ADDED:
+        # Fetch all assets for this request
+        assets = db.query(models.Asset).filter(models.Asset.request_id == id).all()
+        return templates.TemplateResponse("assets_view.html", {
+            "request": request,
+            "assets": assets,
+            "consultancy_request": db_request
+        })
+    
+    # For other statuses, show the regular status page
     return templates.TemplateResponse("status.html", {
         "request": request,
         "status": db_request.status,
         "date": db_request.date,
         "description": db_request.description,
+    })
+    
+# Add a new endpoint to view assets directly
+@router.get("/view-assets/{request_id}", response_class=HTMLResponse)
+async def view_assets(request: Request, request_id: int, db: Session = Depends(get_db)):
+    db_request = db.query(models.ConsultancyRequest).filter(
+        models.ConsultancyRequest.id == request_id
+    ).first()
+    
+    if not db_request:
+        return HTMLResponse(content="Request not found.", status_code=404)
+    
+    if db_request.status != models.RequestStatus.ASSETS_ADDED:
+        return HTMLResponse(content="No assets available for this request.", status_code=400)
+    
+    assets = db.query(models.Asset).filter(models.Asset.request_id == request_id).all()
+    
+    return templates.TemplateResponse("assets_view.html", {
+        "request": request,
+        "assets": assets,
+        "consultancy_request": db_request
     })
     
     

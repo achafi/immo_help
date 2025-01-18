@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Assets View</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-2xl font-bold mb-4">Assets for Request #{{ consultancy_request.id }}</h1>
+            <div class="mb-4">
+                <p class="text-gray-700">Status: <span class="font-semibold">{{ consultancy_request.status }}</span></p>
+                <p class="text-gray-700">Date: {{ consultancy_request.date.strftime('%Y-%m-%d') }}</p>
+                <p class="text-gray-700">Description: {{ consultancy_request.description }}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for asset in assets %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                {% if asset.image_path %}
+                <img src="{{ asset.image_path }}" alt="{{ asset.title }}" class="w-full h-48 object-cover">
+                {% endif %}
+                <div class="p-4">
+                    <h2 class="text-xl font-semibold mb-2">{{ asset.title }}</h2>
+                    <p class="text-gray-600 mb-2">{{ asset.description }}</p>
+                    <p class="text-sm text-gray-500">Added on: {{ asset.created_at.strftime('%Y-%m-%d') }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not assets %}
+        <div class="text-center py-8">
+            <p class="text-gray-600">No assets found for this request.</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-8 text-center">
+            <a href="/consultancy/check-status?id={{ consultancy_request.id }}"
+                class="inline-block bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
+                Back to Status
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -35,3 +35,4 @@ def read_root(request: Request):
 @app.get("/add_asset", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("add_asset.html", {"request": request})
+
