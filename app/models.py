@@ -22,6 +22,7 @@ class RequestStatus(str, enum.Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     MEETING_DONE = "meeting_done"
+    ASSETS_ADDED = "assets_added"
 
 class ConsultancyRequest(Base):
     __tablename__ = "consultancy_requests"
@@ -34,29 +35,15 @@ class ConsultancyRequest(Base):
     calendar_event_id = Column(String, nullable=True)
     
     
-# class Asset(Base):
-#     __tablename__ = "assets"
+class Asset(Base):
+    __tablename__ = "assets"
 
-#     id = Column(Integer, primary_key=True, index=True)
-#     request_id = Column(Integer, ForeignKey("consultancy_requests.id"))
-#     title = Column(String)
-#     description = Column(String)
-#     image_path = Column(String, nullable=True)
-#     created_at = Column(DateTime, default=datetime.utcnow)
-
-# # schemas.py
-# class AssetBase(BaseModel):
-#     title: str
-#     description: str
-#     image_path: Optional[str] = None
-
-# class AssetCreate(AssetBase):
-#     pass
-
-# class Asset(AssetBase):
-#     id: int
-#     request_id: int
-#     created_at: datetime
-
-#     class Config:
-#         orm_mode = True
+    id = Column(Integer, primary_key=True, index=True)
+    request_id = Column(Integer, ForeignKey("consultancy_requests.id"))
+    title = Column(String)
+    description = Column(String)
+    image_path = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+# Create all tables
+Base.metadata.create_all(bind=engine) # simple solution for now : Alembic to be implemeted later

@@ -41,18 +41,22 @@
                 </div>
 
                 <div class="flex justify-end space-x-4">
-                    <button type="button" onclick="addMoreAssets()"
+                    <button type="button" onclick="addAsset()"
                         class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                        Add Another Asset
-                    </button>
-                    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-                        Save All Assets
+                        Add to List
                     </button>
                 </div>
             </form>
 
             <div id="assetsList" class="mt-8 space-y-4">
                 <!-- Added assets will appear here -->
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="saveAllAssets()" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+                    id="saveButton" disabled>
+                    Save All Assets
+                </button>
             </div>
         </div>
     </div>
@@ -64,7 +68,7 @@
 
         let assets = [];
 
-        function addMoreAssets() {
+        function addAsset() {
             const form = document.getElementById('assetForm');
             const formData = new FormData(form);
 
@@ -72,13 +76,14 @@
                 assets.push({
                     title: formData.get('title'),
                     description: formData.get('description'),
-                    image: formData.get('image')
+                    image_path: formData.get('image').name || null
                 });
 
                 updateAssetsList();
                 form.reset();
+                document.getElementById('saveButton').disabled = false;
             } else {
-                alert('Please fill in all required fields before adding another asset');
+                alert('Please fill in all required fields');
             }
         }
 
@@ -90,6 +95,7 @@
                         <div>
                             <h3 class="font-semibold">${asset.title}</h3>
                             <p class="text-sm text-gray-600">${asset.description}</p>
+                            ${asset.image_path ? `<p class="text-xs text-gray-500">Image: ${asset.image_path}</p>` : ''}
                         </div>
                         <button onclick="removeAsset(${index})" 
                             class="text-red-600 hover:text-red-800">Remove</button>
@@ -101,35 +107,48 @@
         function removeAsset(index) {
             assets.splice(index, 1);
             updateAssetsList();
+            document.getElementById('saveButton').disabled = assets.length === 0;
         }
 
-        document.getElementById('assetForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            if (document.querySelector('[name="title"]').value) {
-                addMoreAssets();
+        async function saveAllAssets() {
+            if (assets.length === 0) {
+                alert('Please add at least one asset');
+                return;
             }
 
             try {
-                const response = await fetch(`http://localhost:8000/consultancy/add_assets/${requestId}`, {
+                // First save the assets
+                const assetResponse = await fetch(`http://localhost:8000/consultancy/add_assets/${requestId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ assets })
+                    body: JSON.stringify({ assets: assets })
                 });
 
-                if (response.ok) {
-                    alert('Assets saved successfully!');
-                    window.location.href = '/consultancy/admin';
-                } else {
-                    alert('Error saving assets');
-                }
+                if (!assetResponse.ok) throw new Error('Failed to save assets');
+
+                // Then update the request status to 'assets_added'
+                const statusResponse = await fetch('http://localhost:8000/consultancy/approve_consultancy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        request_id: parseInt(requestId),
+                        status: 'assets_added'
+                    })
+                });
+
+                if (!statusResponse.ok) throw new Error('Failed to update status');
+
+                alert('Assets saved successfully!');
+                window.location.href = '/admin';
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error saving assets');
+                alert('Error saving assets: ' + error.message);
             }
-        });
+        }
     </script>
 </body>
 

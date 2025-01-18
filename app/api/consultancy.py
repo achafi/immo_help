@@ -73,11 +73,25 @@ async def add_assets_page(request: Request, request_id: int, db: Session = Depen
 @router.post("/add_assets/{request_id}", response_model=List[schemas.Asset])
 async def add_assets(
     request_id: int,
-    assets: List[schemas.AssetCreate],
+    assets_list: schemas.AssetsList,
     db: Session = Depends(get_db)
 ):
+    # First check if the request exists and is in the correct status
+    db_request = db.query(models.ConsultancyRequest).filter(
+        models.ConsultancyRequest.id == request_id
+    ).first()
+    
+    if not db_request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    if db_request.status != models.RequestStatus.MEETING_DONE:
+        raise HTTPException(
+            status_code=400, 
+            detail="Can only add assets to requests with 'meeting_done' status"
+        )
+
     db_assets = []
-    for asset in assets:
+    for asset in assets_list.assets:
         db_asset = models.Asset(
             request_id=request_id,
             title=asset.title,
@@ -86,6 +100,9 @@ async def add_assets(
         )
         db.add(db_asset)
         db_assets.append(db_asset)
+    
+    # Update request status
+    db_request.status = models.RequestStatus.ASSETS_ADDED
     
     db.commit()
     for asset in db_assets:

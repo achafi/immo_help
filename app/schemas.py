@@ -45,7 +45,9 @@ class AssetUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     image_path: Optional[str] = None
-    
+
+class AssetsList(BaseModel):
+    assets: List[AssetCreate]
     
 # class ConsultancyRequestResponse(BaseModel):
 #     id: int
