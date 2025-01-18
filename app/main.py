@@ -31,3 +31,7 @@ def read_root(request: Request):
 @app.get("/check_status", response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse("check_status.html", {"request": request})
+
+@app.get("/add_asset", response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse("add_asset.html", {"request": request})

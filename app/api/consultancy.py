@@ -61,3 +61,34 @@ async def check_status_page(request: Request, id: int, db: Session = Depends(get
         "date": db_request.date,
         "description": db_request.description,
     })
+    
+    
+@router.get("/add-assets/{request_id}", response_class=HTMLResponse)
+async def add_assets_page(request: Request, request_id: int, db: Session = Depends(get_db)):
+    return templates.TemplateResponse("add_assets.html", {
+        "request": request,
+        "request_id": request_id
+    })
+
+@router.post("/add_assets/{request_id}", response_model=List[schemas.Asset])
+async def add_assets(
+    request_id: int,
+    assets: List[schemas.AssetCreate],
+    db: Session = Depends(get_db)
+):
+    db_assets = []
+    for asset in assets:
+        db_asset = models.Asset(
+            request_id=request_id,
+            title=asset.title,
+            description=asset.description,
+            image_path=asset.image_path
+        )
+        db.add(db_asset)
+        db_assets.append(db_asset)
+    
+    db.commit()
+    for asset in db_assets:
+        db.refresh(asset)
+    
+    return db_assets

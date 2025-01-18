@@ -28,7 +28,11 @@ def get_consultancy_requests(db: Session):
 def update_consultancy_request_status(db: Session, request_id: int, status: str):
     db_request = db.query(ConsultancyRequest).filter(ConsultancyRequest.id == request_id).first()
     if db_request:
+        # Validate status transitions
+        if status == "meeting_done" and db_request.status != "approved":
+            raise ValueError("Can only mark meeting as done for approved requests")
+        
         db_request.status = status
         db.commit()
-        return db_request
-    return None
+        db.refresh(db_request)
+    return db_request

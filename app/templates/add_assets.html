@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Assets</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold">Add Assets for Request #<span id="requestId"></span></h1>
+                <button onclick="window.location.href='/admin'"
+                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Back to Dashboard
+                </button>
+            </div>
+
+            <form id="assetForm" class="space-y-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Asset Title</label>
+                        <input type="text" name="title" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea name="description" rows="3" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Asset Image</label>
+                        <input type="file" name="image" accept="image/*"
+                            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="addMoreAssets()"
+                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                        Add Another Asset
+                    </button>
+                    <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                        Save All Assets
+                    </button>
+                </div>
+            </form>
+
+            <div id="assetsList" class="mt-8 space-y-4">
+                <!-- Added assets will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get request ID from URL
+        const requestId = window.location.pathname.split('/').pop();
+        document.getElementById('requestId').textContent = requestId;
+
+        let assets = [];
+
+        function addMoreAssets() {
+            const form = document.getElementById('assetForm');
+            const formData = new FormData(form);
+
+            if (formData.get('title') && formData.get('description')) {
+                assets.push({
+                    title: formData.get('title'),
+                    description: formData.get('description'),
+                    image: formData.get('image')
+                });
+
+                updateAssetsList();
+                form.reset();
+            } else {
+                alert('Please fill in all required fields before adding another asset');
+            }
+        }
+
+        function updateAssetsList() {
+            const assetsList = document.getElementById('assetsList');
+            assetsList.innerHTML = assets.map((asset, index) => `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold">${asset.title}</h3>
+                            <p class="text-sm text-gray-600">${asset.description}</p>
+                        </div>
+                        <button onclick="removeAsset(${index})" 
+                            class="text-red-600 hover:text-red-800">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeAsset(index) {
+            assets.splice(index, 1);
+            updateAssetsList();
+        }
+
+        document.getElementById('assetForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (document.querySelector('[name="title"]').value) {
+                addMoreAssets();
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8000/consultancy/add_assets/${requestId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ assets })
+                });
+
+                if (response.ok) {
+                    alert('Assets saved successfully!');
+                    window.location.href = '/consultancy/admin';
+                } else {
+                    alert('Error saving assets');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error saving assets');
+            }
+        });
+    </script>
+</body>
+
+</html>
