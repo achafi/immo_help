@@ -1,16 +1,24 @@
 from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.api.consultancy import router as consultancy_router
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+# Create a directory for uploads 
+UPLOAD_DIR = "app/static/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Initialize FastAPI app
 app = FastAPI()
+
+# Mount the static directory
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Include API router for consultancy endpoints
 app.include_router(consultancy_router, prefix="/consultancy", tags=["Consultancy"])
