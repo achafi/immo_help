@@ -94,13 +94,11 @@
 
             return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${badge.class}">${badge.text}</span>`;
         }
-
         async function checkStatus() {
             const requestId = document.getElementById('requestId').value;
             const resultCard = document.getElementById('resultCard');
             const errorMessage = document.getElementById('errorMessage');
-            const assetsSection = document.getElementById('assetsSection');
-            const assetsList = document.getElementById('assetsList');
+            const viewAssetsButtonContainer = document.getElementById('viewAssetsButtonContainer');
         
             if (!requestId) {
                 errorMessage.classList.remove('hidden');
@@ -119,24 +117,17 @@
                     document.getElementById('requestDate').textContent = formatDate(request.date);
                     document.getElementById('requestDescription').textContent = request.description;
         
-                    // Handle the "View Assets" button based on status
-                    const viewAssetsButton = document.getElementById('viewAssetsButton');
+                    // Clear the existing button container content
+                    viewAssetsButtonContainer.innerHTML = '';
+        
+                    // Add the View Assets button only if status is assets_added
                     if (request.status === "assets_added") {
-                        // Show the View Assets button
-                        if (!viewAssetsButton) {
-                            const buttonContainer = document.createElement('div');
-                            buttonContainer.className = 'mt-4';
-                            buttonContainer.innerHTML = `
-                                <a href="/consultancy/view-assets/${requestId}" 
-                                   class="inline-block bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">
-                                    View Assets
-                                </a>
-                            `;
-                            document.querySelector('#resultCard .space-y-3').appendChild(buttonContainer);
-                        }
-                    } else if (viewAssetsButton) {
-                        // Remove the button if status is not assets_added
-                        viewAssetsButton.remove();
+                        viewAssetsButtonContainer.innerHTML = `
+                            <a href="/consultancy/view-assets/${requestId}" 
+                               class="inline-block bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">
+                                View Assets
+                            </a>
+                        `;
                     }
         
                     // Show result, hide error
