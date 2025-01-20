@@ -106,9 +106,16 @@ async def view_assets(request: Request, request_id: int, db: Session = Depends(g
     
 @router.get("/add-assets/{request_id}", response_class=HTMLResponse)
 async def add_assets_page(request: Request, request_id: int, db: Session = Depends(get_db)):
+    # Fetch the request based on the ID
+    db_request = db.query(models.ConsultancyRequest).filter(
+        models.ConsultancyRequest.id == request_id
+    ).first()
+    if not db_request:
+        return HTMLResponse(content="Request not found.", status_code=404)
     return templates.TemplateResponse("add_assets.html", {
         "request": request,
-        "request_id": request_id
+        "request_id": request_id,
+        "request_status": db_request.status
     })
 
 @router.post("/add_assets/{request_id}", response_model=List[schemas.Asset])
@@ -129,7 +136,7 @@ async def add_assets(
         if not db_request:
             raise HTTPException(status_code=404, detail="Request not found")
         
-        if db_request.status != models.RequestStatus.MEETING_DONE:
+        if db_request.status not in [models.RequestStatus.MEETING_DONE , models.RequestStatus.ASSETS_ADDED]:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Can only add assets to requests with 'meeting_done' status. Current status: {db_request.status}"

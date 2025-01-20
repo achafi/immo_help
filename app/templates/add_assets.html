@@ -7,69 +7,160 @@
 </head>
 
 <body class="bg-gray-100 p-8">
-    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
         <h2 class="text-2xl font-bold mb-4">Add Assets</h2>
-        <form id="assetForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Title</label>
-                <input type="text" id="title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+
+        <!-- New button to navigate to view-assets if ASSETS_ADDED -->
+        <button id="viewAssetsBtn" class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 mb-4 w-full"
+            onclick="checkStatus()">
+            View Assets
+        </button>
+
+        <script>
+            console.log("Request ID: {{ request_id }}");
+            console.log("Request Status: {{ request_status }}");
+        </script>
+
+        <!-- Form -->
+        <form id="assetForm" class="space-y-6">
+            <div id="assetsList" class="space-y-8">
+                <!-- Asset items will be added here -->
+                <div class="asset-item border-b pb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Asset 1</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Title</label>
+                            <input type="text"
+                                class="asset-title mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea class="asset-description mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                                required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Image</label>
+                            <input type="file" class="asset-image mt-1 block w-full" accept="image/*" required>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Description</label>
-                <textarea id="description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+
+            <div class="flex justify-between items-center pt-4">
+                <button type="button" id="addAssetBtn"
+                    class="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">
+                    Add Another Asset
+                </button>
+                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
+                    Submit All Assets
+                </button>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Image</label>
-                <input type="file" id="image" accept="image/*" class="mt-1 block w-full">
-            </div>
-            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">
-                Add Asset
-            </button>
         </form>
     </div>
 
-    // Update the script section in add_assets.html
     <script>
+        let assetCount = 1;
+
+        // Function to create new asset item
+        function createAssetItem(number) {
+            const template = `
+                <div class="asset-item border-b pb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Asset ${number}</h3>
+                        ${number > 1 ? `
+                            <button type="button" class="remove-asset-btn text-red-500 hover:text-red-700">
+                                Remove Asset
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Title</label>
+                            <input type="text" class="asset-title mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea class="asset-description mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Image</label>
+                            <input type="file" class="asset-image mt-1 block w-full" accept="image/*" required>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return template;
+        }
+
+        // Add asset button functionality
+        document.getElementById('addAssetBtn').addEventListener('click', () => {
+            assetCount++;
+            const assetsList = document.getElementById('assetsList');
+            const newAssetHtml = createAssetItem(assetCount);
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = newAssetHtml;
+            assetsList.appendChild(tempContainer.firstElementChild);
+        });
+
+        // Remove asset button functionality
+        document.getElementById('assetsList').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-asset-btn')) {
+                e.target.closest('.asset-item').remove();
+                // Renumber remaining assets
+                document.querySelectorAll('.asset-item').forEach((item, index) => {
+                    item.querySelector('h3').textContent = `Asset ${index + 1}`;
+                });
+                assetCount--;
+            }
+        });
+
+        // Submit asset form
         document.getElementById('assetForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const assetItems = document.querySelectorAll('.asset-item');
+            const assets = [];
 
-            // First upload the file
-            const fileInput = document.getElementById('image');
-            const file = fileInput.files[0];
-            let imagePath = null;
+            // Upload files and prepare assets data
+            for (const assetItem of assetItems) {
+                const fileInput = assetItem.querySelector('.asset-image');
+                const file = fileInput.files[0];
+                let imagePath = null;
 
-            if (file) {
-                try {
-                    const formData = new FormData();
-                    formData.append('file', file);
+                if (file) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', file);
 
-                    const uploadResponse = await fetch('/consultancy/upload-file/', {
-                        method: 'POST',
-                        body: formData
-                    });
+                        const uploadResponse = await fetch('/consultancy/upload-file/', {
+                            method: 'POST',
+                            body: formData
+                        });
 
-                    if (uploadResponse.ok) {
-                        const uploadResult = await uploadResponse.json();
-                        imagePath = `/static/uploads/${uploadResult.filename}`;
-                    } else {
-                        console.error('File upload failed:', await uploadResponse.text());
+                        if (uploadResponse.ok) {
+                            const uploadResult = await uploadResponse.json();
+                            imagePath = `/static/uploads/${uploadResult.filename}`;
+                        } else {
+                            console.error('File upload failed:', await uploadResponse.text());
+                            alert('File upload failed');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error uploading file:', error);
+                        alert('Error uploading file');
                         return;
                     }
-                } catch (error) {
-                    console.error('Error uploading file:', error);
-                    return;
                 }
+
+                assets.push({
+                    title: assetItem.querySelector('.asset-title').value,
+                    description: assetItem.querySelector('.asset-description').value,
+                    image_path: imagePath
+                });
             }
 
-            // Then create the asset
-            const assetData = {
-                assets: [{
-                    title: document.getElementById('title').value,
-                    description: document.getElementById('description').value,
-                    image_path: imagePath
-                }]
-            };
-
+            const assetData = { assets };
             console.log('Sending asset data:', assetData);
 
             const requestId = "{{ request_id }}";
@@ -87,13 +178,24 @@
                 } else {
                     const errorData = await response.text();
                     console.error('Error response:', errorData);
-                    alert('Error adding asset: ' + errorData);
+                    alert('Error adding assets: ' + errorData);
                 }
             } catch (error) {
                 console.error('Error sending request:', error);
-                alert('Error adding asset');
+                alert('Error adding assets');
             }
         });
+        // Function to check request status and navigate
+        function checkStatus() {
+            const requestStatus = "{{ request_status }}"; // Get status from the backend template
+            const requestId = "{{ request_id }}"; // Get the request ID from the backend template
+
+            if (requestStatus === "assets_added") {
+                window.location.href = `/consultancy/view-assets/${requestId}`;
+            } else {
+                alert(`No asset added yet. current status ${requestStatus}`);
+            }
+        }
     </script>
 </body>
 
