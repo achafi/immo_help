@@ -49,6 +49,15 @@ class AssetUpdate(BaseModel):
 class AssetsList(BaseModel):
     assets: List[AssetCreate]
     
+class FeedbackRequest(BaseModel):
+    asset_id: int
+    feedback_type: str
+
+class SuggestionRequest(BaseModel):
+    asset_id: int
+    suggestion: str
+
+    
 # class ConsultancyRequestResponse(BaseModel):
 #     id: int
 #     user_id: int

@@ -39,7 +39,7 @@
 
         <!-- Add a link to the status checker -->
         <div class="mt-4 text-center">
-            <a href="check-status.html" class="text-blue-600 hover:text-blue-800">
+            <a href="/check_status" class="text-blue-600 hover:text-blue-800">
                 Check your request status
             </a>
         </div>
@@ -69,12 +69,8 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    // Display message with request ID and link to check status
-                    //showMessage(`Request submitted successfully! Your request ID is: <strong>${result.id}</strong>. <a href="check-status.html?id=${result.id}" id="check-status-link">Click here to check your request status</a>.`, 'success');
-                    //showMessage(`Request submitted successfully! Your request ID is: <strong>${result.id}</strong>. <a href="status?id=${result.id}" id="check-status-link">Click here to check your request status</a>.`, 'success');
-                    //document.getElementById('consultancyForm').reset();
-                    // Redirect to the check-status page with the request ID as a query parameter
-                    window.location.href = `consultancy/check-status?id=${result.id}`;
+                    showMessage(`Request successfully created. Please note the ID: <strong>${result.id}</strong>. You can use this ID to check the status of your request.`, 'success');
+                    document.getElementById('consultancyForm').reset();
                 } else {
                     showMessage('Error submitting request. Please try again.', 'error');
                 }

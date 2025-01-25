@@ -177,3 +177,49 @@ async def upload_file(file: UploadFile = File(...)):
         return {"filename": file.filename}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/submit-feedback/")
+def submit_feedback(feedback: schemas.FeedbackRequest, db: Session = Depends(get_db)):
+    # Validate feedback type
+    if feedback.feedback_type not in ['like', 'dislike']:
+        raise HTTPException(status_code=400, detail="Invalid feedback type")
+    
+    # Check if asset exists
+    asset = db.query(models.Asset).filter(models.Asset.id == feedback.asset_id).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    
+    # Create feedback entry
+    new_feedback = models.AssetFeedback(
+        asset_id=feedback.asset_id,
+        feedback_type=feedback.feedback_type
+    )
+    
+    db.add(new_feedback)
+    db.commit()
+    db.refresh(new_feedback)
+    
+    return {"success": True, "message": "Feedback submitted successfully"}
+
+@router.post("/submit-suggestion/")
+def submit_suggestion(suggestion: schemas.SuggestionRequest, db: Session = Depends(get_db)):
+    # Validate suggestion text
+    if not suggestion.suggestion.strip():
+        raise HTTPException(status_code=400, detail="Suggestion cannot be empty")
+    
+    # Check if asset exists
+    asset = db.query(models.Asset).filter(models.Asset.id == suggestion.asset_id).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    
+    # Create suggestion entry
+    new_suggestion = models.AssetSuggestion(
+        asset_id=suggestion.asset_id,
+        suggestion_text=suggestion.suggestion
+    )
+    
+    db.add(new_suggestion)
+    db.commit()
+    db.refresh(new_suggestion)
+    
+    return {"success": True, "message": "Suggestion submitted successfully"}

@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
+from sqlalchemy.orm import relationship
 
 load_dotenv()
 
@@ -45,5 +46,20 @@ class Asset(Base):
     image_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-# Create all tables
-Base.metadata.create_all(bind=engine) # simple solution for now : Alembic to be implemeted later
+class AssetFeedback(Base):
+    __tablename__ = "asset_feedbacks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    asset_id = Column(Integer, ForeignKey("assets.id"))
+    feedback_type = Column(String)  # 'like' or 'dislike'
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class AssetSuggestion(Base):
+    __tablename__ = "asset_suggestions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    asset_id = Column(Integer, ForeignKey("assets.id"))
+    suggestion_text = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+Base.metadata.create_all(bind=engine)
